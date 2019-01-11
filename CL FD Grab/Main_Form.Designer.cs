@@ -31,6 +31,8 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Form));
             this.panel_header = new System.Windows.Forms.Panel();
+            this.textBox_bill_no = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.pictureBox_header = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.label_title = new System.Windows.Forms.Label();
@@ -38,7 +40,7 @@
             this.pictureBox_close = new System.Windows.Forms.PictureBox();
             this.label_brand = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.label_player_last_registered = new System.Windows.Forms.Label();
+            this.label_player_last_bill_no = new System.Windows.Forms.Label();
             this.timer_landing = new System.Windows.Forms.Timer(this.components);
             this.label_page_count = new System.Windows.Forms.Label();
             this.label_currentrecord = new System.Windows.Forms.Label();
@@ -46,6 +48,9 @@
             this.pictureBox_loader = new System.Windows.Forms.PictureBox();
             this.panel_landing = new System.Windows.Forms.Panel();
             this.pictureBox_landing = new System.Windows.Forms.PictureBox();
+            this.timer_close_message_box = new System.Windows.Forms.Timer(this.components);
+            this.timer = new System.Windows.Forms.Timer(this.components);
+            this.timer_pending = new System.Windows.Forms.Timer(this.components);
             this.panel_header.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_header)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_minimize)).BeginInit();
@@ -58,6 +63,8 @@
             // panel_header
             // 
             this.panel_header.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(90)))), ((int)(((byte)(101)))));
+            this.panel_header.Controls.Add(this.textBox_bill_no);
+            this.panel_header.Controls.Add(this.label1);
             this.panel_header.Controls.Add(this.pictureBox_header);
             this.panel_header.Controls.Add(this.panel1);
             this.panel_header.Controls.Add(this.label_title);
@@ -69,6 +76,24 @@
             this.panel_header.Size = new System.Drawing.Size(466, 45);
             this.panel_header.TabIndex = 1;
             this.panel_header.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel_header_MouseDown);
+            // 
+            // textBox_bill_no
+            // 
+            this.textBox_bill_no.Location = new System.Drawing.Point(162, 13);
+            this.textBox_bill_no.Name = "textBox_bill_no";
+            this.textBox_bill_no.Size = new System.Drawing.Size(139, 20);
+            this.textBox_bill_no.TabIndex = 7;
+            this.textBox_bill_no.Visible = false;
+            this.textBox_bill_no.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_bill_no_KeyDown);
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(9, 12);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(445, 149);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "label1";
+            this.label1.Visible = false;
             // 
             // pictureBox_header
             // 
@@ -88,6 +113,7 @@
             this.panel1.Size = new System.Drawing.Size(158, 10);
             this.panel1.TabIndex = 1;
             this.panel1.TabStop = true;
+            this.panel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseClick);
             this.panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             // 
             // label_title
@@ -151,21 +177,23 @@
             this.panel2.Size = new System.Drawing.Size(158, 10);
             this.panel2.TabIndex = 5;
             this.panel2.TabStop = true;
+            this.panel2.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel2_MouseClick);
             this.panel2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel2_MouseDown);
             // 
-            // label_player_last_registered
+            // label_player_last_bill_no
             // 
-            this.label_player_last_registered.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.label_player_last_registered.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label_player_last_registered.Location = new System.Drawing.Point(0, 197);
-            this.label_player_last_registered.Name = "label_player_last_registered";
-            this.label_player_last_registered.Padding = new System.Windows.Forms.Padding(0, 0, 10, 0);
-            this.label_player_last_registered.Size = new System.Drawing.Size(466, 23);
-            this.label_player_last_registered.TabIndex = 8;
-            this.label_player_last_registered.Text = "-";
-            this.label_player_last_registered.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.label_player_last_registered.Visible = false;
-            this.label_player_last_registered.MouseDown += new System.Windows.Forms.MouseEventHandler(this.label_player_last_registered_MouseDown);
+            this.label_player_last_bill_no.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.label_player_last_bill_no.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label_player_last_bill_no.Location = new System.Drawing.Point(0, 197);
+            this.label_player_last_bill_no.Name = "label_player_last_bill_no";
+            this.label_player_last_bill_no.Padding = new System.Windows.Forms.Padding(0, 0, 10, 0);
+            this.label_player_last_bill_no.Size = new System.Drawing.Size(466, 23);
+            this.label_player_last_bill_no.TabIndex = 8;
+            this.label_player_last_bill_no.Text = "-";
+            this.label_player_last_bill_no.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.label_player_last_bill_no.Visible = false;
+            this.label_player_last_bill_no.MouseClick += new System.Windows.Forms.MouseEventHandler(this.label_player_last_bill_no_MouseClick);
+            this.label_player_last_bill_no.MouseDown += new System.Windows.Forms.MouseEventHandler(this.label_player_last_bill_no_MouseDown);
             // 
             // timer_landing
             // 
@@ -201,7 +229,7 @@
             this.webBrowser.ScriptErrorsSuppressed = true;
             this.webBrowser.Size = new System.Drawing.Size(445, 402);
             this.webBrowser.TabIndex = 2;
-            this.webBrowser.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.WebBrowser_DocumentCompleted);
+            this.webBrowser.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.WebBrowser_DocumentCompletedAsync);
             // 
             // pictureBox_loader
             // 
@@ -238,6 +266,22 @@
             this.pictureBox_landing.TabStop = false;
             this.pictureBox_landing.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_landing_MouseDown);
             // 
+            // timer_close_message_box
+            // 
+            this.timer_close_message_box.Enabled = true;
+            this.timer_close_message_box.Tick += new System.EventHandler(this.timer_close_message_box_Tick);
+            // 
+            // timer
+            // 
+            this.timer.Interval = 15000;
+            this.timer.Tick += new System.EventHandler(this.timer_TickAsync);
+            // 
+            // timer_pending
+            // 
+            this.timer_pending.Enabled = true;
+            this.timer_pending.Interval = 20000;
+            this.timer_pending.Tick += new System.EventHandler(this.timer_pending_TickAsync);
+            // 
             // Main_Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -249,7 +293,7 @@
             this.Controls.Add(this.webBrowser);
             this.Controls.Add(this.label_page_count);
             this.Controls.Add(this.label_brand);
-            this.Controls.Add(this.label_player_last_registered);
+            this.Controls.Add(this.label_player_last_bill_no);
             this.Controls.Add(this.pictureBox_loader);
             this.Controls.Add(this.label_currentrecord);
             this.Controls.Add(this.panel_header);
@@ -286,12 +330,17 @@
         private System.Windows.Forms.Label label_brand;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Label label_player_last_registered;
+        private System.Windows.Forms.Label label_player_last_bill_no;
         private System.Windows.Forms.Timer timer_landing;
         private System.Windows.Forms.Label label_page_count;
         private System.Windows.Forms.Label label_currentrecord;
         private System.Windows.Forms.PictureBox pictureBox_header;
         private System.Windows.Forms.Panel panel_landing;
         private System.Windows.Forms.PictureBox pictureBox_landing;
+        private System.Windows.Forms.Timer timer_close_message_box;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Timer timer;
+        private System.Windows.Forms.Timer timer_pending;
+        private System.Windows.Forms.TextBox textBox_bill_no;
     }
 }
