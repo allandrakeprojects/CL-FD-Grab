@@ -8,7 +8,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Mail;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,6 +27,7 @@ namespace CL_FD_Grab
         private int __total_player = 0;
         private string __brand_code = "CL";
         private string __brand_color = "#2160AD";
+        private string __app = "FD Grab";
         private string __player_last_bill_no = "";
         private string __playerlist_cn = "";
         private string __playerlist_name = "";
@@ -251,31 +251,8 @@ namespace CL_FD_Grab
         private void Main_Form_Load(object sender, EventArgs e)
         {
             webBrowser.Navigate("http://sn.gk001.gpk456.com/Account/Login");
-            Properties.Settings.Default.______last_bill_no = "";
-            label1.Text = Properties.Settings.Default.______pending_bill_no;
-            if (Properties.Settings.Default.______last_bill_no == "")
-            {
-                textBox_bill_no.Visible = true;
-                ((Control)webBrowser).Enabled = false;
-            }
-        }
 
-        private void textBox_bill_no_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (!String.IsNullOrEmpty(textBox_bill_no.Text.Trim()))
-            {
-                if (e.KeyCode == Keys.Enter)
-                {
-                    DialogResult dr = MessageBox.Show("Proceed?", "CL FD Grab", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (dr == DialogResult.Yes)
-                    {
-                        Properties.Settings.Default.______last_bill_no = textBox_bill_no.Text.Trim();
-                        Properties.Settings.Default.Save();
-                        textBox_bill_no.Visible = false;
-                        ((Control)webBrowser).Enabled = true;
-                    }
-                }
-            }
+            label1.Text = Properties.Settings.Default.______pending_bill_no;
         }
 
         static int LineNumber([System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
@@ -306,7 +283,7 @@ namespace CL_FD_Grab
 
                                 string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                                 SendITSupport("The application have been logout, please re-login again.");
-                                SendEmail("<html><body>Brand: <font color='" + __brand_color + "'>-----" + __brand_code + "-----</font><br/>IP: 192.168.10.252<br/>Location: Robinsons Summit Office<br/>Date and Time: [" + datetime + "]<br/>Line Number: " + LineNumber() + "<br/>Message: <b>The application have been logout, please re-login again.</b></body></html>");
+                                SendMyBot("The application have been logout, please re-login again.");
                                 __send = 0;
                                 timer_pending.Stop();
                             }
@@ -344,7 +321,13 @@ namespace CL_FD_Grab
                     }
                     catch (Exception err)
                     {
+                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
+                        __send = 0;
 
+                        __isClose = false;
+                        Environment.Exit(0);
                     }
                 }
             }
@@ -383,7 +366,116 @@ namespace CL_FD_Grab
 
         private void ___PlayerLastBillNo()
         {
+            if (Properties.Settings.Default.______last_bill_no == "")
+            {
+                ___GetLastBillNo();
+            }
+
             label_player_last_bill_no.Text = "Last Bill No.: " + Properties.Settings.Default.______last_bill_no;
+        }
+
+        private void ___GetLastBillNo()
+        {
+            try
+            {
+                string password = __brand_code.ToString() + "youdieidie";
+                byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
+                byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+                string token = BitConverter.ToString(hash)
+                   .Replace("-", string.Empty)
+                   .ToLower();
+
+                using (var wb = new WebClient())
+                {
+                    var data = new NameValueCollection
+                    {
+                        ["brand_code"] = __brand_code,
+                        ["token"] = token
+                    };
+
+                    var result = wb.UploadValues("http://zeus.ssimakati.com:8080/API/lastFDRecord", "POST", data);
+                    string responsebody = Encoding.UTF8.GetString(result);
+                    var deserializeObject = JsonConvert.DeserializeObject(responsebody);
+                    JObject jo = JObject.Parse(deserializeObject.ToString());
+                    JToken lbn = jo.SelectToken("$.msg");
+
+                    Properties.Settings.Default.______last_bill_no = lbn.ToString();
+                    Properties.Settings.Default.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                if (__isLogin)
+                {
+                    __send++;
+                    if (__send == 5)
+                    {
+                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
+                        __send = 0;
+
+                        __isClose = false;
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        ___GetLastBillNo2();
+                    }
+                }
+            }
+        }
+
+        private void ___GetLastBillNo2()
+        {
+            try
+            {
+                string password = __brand_code + "youdieidie";
+                byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
+                byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+                string token = BitConverter.ToString(hash)
+                   .Replace("-", string.Empty)
+                   .ToLower();
+
+                using (var wb = new WebClient())
+                {
+                    var data = new NameValueCollection
+                    {
+                        ["brand_code"] = __brand_code,
+                        ["token"] = token
+                    };
+
+                    var result = wb.UploadValues("http://zeus2.ssitex.com:8080/API/lastFDRecord", "POST", data);
+                    string responsebody = Encoding.UTF8.GetString(result);
+                    var deserializeObject = JsonConvert.DeserializeObject(responsebody);
+                    JObject jo = JObject.Parse(deserializeObject.ToString());
+                    JToken lbn = jo.SelectToken("$.msg");
+
+                    Properties.Settings.Default.______last_bill_no = lbn.ToString();
+                    Properties.Settings.Default.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                if (__isLogin)
+                {
+                    __send++;
+                    if (__send == 5)
+                    {
+                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
+                        __send = 0;
+
+                        __isClose = false;
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        ___GetLastBillNo();
+                    }
+                }
+            }
         }
 
         private void ___SavePlayerLastBillNo(string bill_no)
@@ -428,7 +520,7 @@ namespace CL_FD_Grab
                     {
                         string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
-                        SendEmail("<html><body>Brand: <font color='" + __brand_color + "'>-----" + __brand_code + "-----</font><br/>IP: 192.168.10.252<br/>Location: Robinsons Summit Office<br/>Date and Time: [" + datetime + "]<br/>Line Number: " + LineNumber() + "<br/>Message: <b>" + err.ToString() + "</b></body></html>");
+                        SendMyBot(err.ToString());
                         __send = 0;
 
                         __isClose = false;
@@ -444,213 +536,222 @@ namespace CL_FD_Grab
 
         private async Task ___PlayerListAsync()
         {
-            try
+            List<string> player_info = new List<string>();
+
+            for (int i = 0; i < __total_player; i++)
             {
-                List<string> player_info = new List<string>();
-
-                for (int i = 0; i < __total_player; i++)
+                JToken bill_no = __jo.SelectToken("$.Data[" + i + "].Id").ToString();
+                if ("SN_" + bill_no.ToString().Trim() != Properties.Settings.Default.______last_bill_no)
                 {
-                    JToken bill_no = __jo.SelectToken("$.Data[" + i + "].Id").ToString();
-                    if ("SN_" + bill_no.ToString().Trim() != Properties.Settings.Default.______last_bill_no)
+                    JToken status = __jo.SelectToken("$.Data[" + i + "].State").ToString();
+                    if (status.ToString() != "Processing" && status.ToString() != "处理中" && status.ToString() != "Đang xử lí")
                     {
-                        JToken status = __jo.SelectToken("$.Data[" + i + "].State").ToString();
-                        if (status.ToString() != "Processing" && status.ToString() != "处理中" && status.ToString() != "Đang xử lí")
+                        if (i == 0)
                         {
-                            if (i == 0)
-                            {
-                                __player_last_bill_no = "SN_" + bill_no.ToString().Trim();
-                            }
+                            __player_last_bill_no = "SN_" + bill_no.ToString().Trim();
+                        }
                             
-                            JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
-                            await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
-                            JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
-                            DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
-                            JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
-                            DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
-                            JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
-                            JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
-                            string[] gateway__method_get = gateway__method.ToString().Split('-');
-                            string gateway = gateway__method_get[1].Trim();
-                            string method = gateway__method_get[0].Trim();
-                            JToken amount = __jo.SelectToken("$.Data[" + i + "].Amount").ToString().Replace(",", "");
-                            if (status.ToString() == "Success" || status.ToString() == "Sucess" || status.ToString() == "成功" || status.ToString() == "Thành công")
-                            {
-                                status = "1";
-                            }
-                            else
-                            {
-                                status = "0";
-                            }
-
-                            player_info.Add(username + "*|*" + __playerlist_name + "*|*" + date_deposit_replace.ToString("yyyy-MM-dd HH:mm:ss") + "*|*" + vip + "*|*" + amount + "*|*" + gateway + "*|*" + status + "*|*" + bill_no + "*|*" + __playerlist_cn + "*|*" + process_datetime_replace.ToString("yyyy-MM-dd HH:mm:ss") + "*|*" + method);
+                        JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
+                        await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
+                        JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
+                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+                        JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
+                        DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+                        JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
+                        JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
+                        string[] gateway__method_get = gateway__method.ToString().Split('-');
+                        string gateway = gateway__method_get[1].Trim();
+                        string method = gateway__method_get[0].Trim();
+                        JToken amount = __jo.SelectToken("$.Data[" + i + "].Amount").ToString().Replace(",", "");
+                        if (status.ToString() == "Success" || status.ToString() == "Sucess" || status.ToString() == "成功" || status.ToString() == "Thành công")
+                        {
+                            status = "1";
                         }
                         else
                         {
-                            if (i == 0)
-                            {
-                                __player_last_bill_no = "SN_" + bill_no.ToString().Trim();
-                            }
-
-                            bool isContains = false;
-                            char[] split = "*|*".ToCharArray();
-                            string[] values = Properties.Settings.Default.______pending_bill_no.Split(split);
-                            foreach (var value in values)
-                            {
-                                if (value != "")
-                                {
-                                    if (bill_no.ToString() == value)
-                                    {
-                                        isContains = true;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        isContains = false;
-                                    }
-                                }
-                            }
-
-                            if (!isContains)
-                            {
-                                Properties.Settings.Default.______pending_bill_no += "SN_" + bill_no + "*|*";
-                                label1.Text = Properties.Settings.Default.______pending_bill_no;
-                                Properties.Settings.Default.Save();
-                            }
-                            else if (Properties.Settings.Default.______pending_bill_no == "")
-                            {
-                                Properties.Settings.Default.______pending_bill_no += "SN_" + bill_no + "*|*";
-                                label1.Text = Properties.Settings.Default.______pending_bill_no;
-                                Properties.Settings.Default.Save();
-                            }
+                            status = "0";
                         }
+
+                        player_info.Add(username + "*|*" + __playerlist_name + "*|*" + date_deposit_replace.ToString("yyyy-MM-dd HH:mm:ss") + "*|*" + vip + "*|*" + amount + "*|*" + gateway + "*|*" + status + "*|*" + bill_no + "*|*" + __playerlist_cn + "*|*" + process_datetime_replace.ToString("yyyy-MM-dd HH:mm:ss") + "*|*" + method);
                     }
                     else
                     {
-                        // send to api
-                        if (player_info.Count != 0)
+                        if (i == 0)
                         {
-                            player_info.Reverse();
-                            string player_info_get = String.Join(",", player_info);
-                            char[] split = ",".ToCharArray();
-                            string[] values = player_info_get.Split(split);
-                            foreach (string value in values)
+                            __player_last_bill_no = "SN_" + bill_no.ToString().Trim();
+                        }
+
+                        JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
+                        await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
+                        JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
+                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+                        JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
+                        //DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+                        JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
+                        JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
+                        string[] gateway__method_get = gateway__method.ToString().Split('-');
+                        string gateway = gateway__method_get[1].Trim();
+                        string method = gateway__method_get[0].Trim();
+                        JToken amount = __jo.SelectToken("$.Data[" + i + "].Amount").ToString().Replace(",", "");
+                        status = "2";
+
+                        player_info.Add(username + "*|*" + __playerlist_name + "*|*" + date_deposit_replace.ToString("yyyy-MM-dd HH:mm:ss") + "*|*" + vip + "*|*" + amount + "*|*" + gateway + "*|*" + status + "*|*" + bill_no + "*|*" + __playerlist_cn + "*|*" + "" + "*|*" + method);
+
+                        bool isContains = false;
+                        char[] split = "*|*".ToCharArray();
+                        string[] values = Properties.Settings.Default.______pending_bill_no.Split(split);
+                        foreach (var value in values)
+                        {
+                            if (value != "")
                             {
-                                Application.DoEvents();
-                                string[] values_inner = value.Split(new string[] { "*|*" }, StringSplitOptions.None);
-                                int count = 0;
-                                string _username = "";
-                                string _name = "";
-                                string _date_deposit = "";
-                                string _vip = "";
-                                string _amount = "";
-                                string _gateway = "";
-                                string _status = "";
-                                string _bill_no = "";
-                                string _contact_no = "";
-                                string _process_datetime = "";
-                                string _method = "";
-
-                                foreach (string value_inner in values_inner)
+                                if (bill_no.ToString() == value)
                                 {
-                                    count++;
-
-                                    // Username
-                                    if (count == 1)
-                                    {
-                                        _username = value_inner;
-                                    }
-                                    // Name
-                                    else if (count == 2)
-                                    {
-                                        _name = value_inner;
-                                    }
-                                    // Deposit Date
-                                    else if (count == 3)
-                                    {
-                                        _date_deposit = value_inner;
-                                    }
-                                    // VIP
-                                    else if (count == 4)
-                                    {
-                                        _vip = value_inner;
-                                    }
-                                    // Amount
-                                    else if (count == 5)
-                                    {
-                                        _amount = value_inner;
-                                    }
-                                    // Gateway
-                                    else if (count == 6)
-                                    {
-                                        _gateway = value_inner;
-                                    }
-                                    // Status
-                                    else if (count == 7)
-                                    {
-                                        _status = value_inner;
-                                    }
-                                    // Bill No
-                                    else if (count == 8)
-                                    {
-                                        _bill_no = value_inner;
-                                    }
-                                    // Contact No
-                                    else if (count == 9)
-                                    {
-                                        _contact_no = value_inner;
-                                    }
-                                    // Process Time
-                                    else if (count == 10)
-                                    {
-                                        _process_datetime = value_inner;
-                                    }
-                                    // Method
-                                    else if (count == 11)
-                                    {
-                                        _method = value_inner;
-                                    }
-                                }
-
-                                // ----- Insert Data
-                                using (StreamWriter file = new StreamWriter(Path.GetTempPath() + @"\fdgrab_cl.txt", true, Encoding.UTF8))
-                                {
-                                    file.WriteLine(_username + "*|*" + _name + "*|*" + _contact_no + "*|*" + _date_deposit + "*|*" + _vip + "*|*" + _amount + "*|*" + _gateway + "*|*" + _status + "*|*" + _bill_no + "*|*" + _process_datetime + "*|*" + _method);
-                                    file.Close();
-                                }
-                                if (__last_username == _username)
-                                {
-                                    Thread.Sleep(1000);
-                                    ___InsertData(_username, _name, _date_deposit, _vip, _amount, _gateway, _status, _bill_no, _contact_no, _process_datetime, _method);
+                                    isContains = true;
+                                    break;
                                 }
                                 else
                                 {
-                                    ___InsertData(_username, _name, _date_deposit, _vip, _amount, _gateway, _status, _bill_no, _contact_no, _process_datetime, _method);
+                                    isContains = false;
                                 }
-                                __last_username = _username;
-
-                                __send = 0;
                             }
                         }
 
-                        if (!String.IsNullOrEmpty(__player_last_bill_no.Trim()))
+                        if (!isContains)
                         {
-                            ___SavePlayerLastBillNo(__player_last_bill_no);
-
-                            Invoke(new Action(() =>
-                            {
-                                label_player_last_bill_no.Text = "Last Bill No.: " + Properties.Settings.Default.______last_bill_no;
-                            }));
+                            Properties.Settings.Default.______pending_bill_no += "SN_" + bill_no + "*|*";
+                            label1.Text = Properties.Settings.Default.______pending_bill_no;
+                            Properties.Settings.Default.Save();
                         }
-
-                        player_info.Clear();
-                        timer.Start();
-                        break;
+                        else if (Properties.Settings.Default.______pending_bill_no == "")
+                        {
+                            Properties.Settings.Default.______pending_bill_no += "SN_" + bill_no + "*|*";
+                            label1.Text = Properties.Settings.Default.______pending_bill_no;
+                            Properties.Settings.Default.Save();
+                        }
                     }
                 }
-            }
-            catch (Exception err)
-            {
-                MessageBox.Show(err.ToString());
+                else
+                {
+                    // send to api
+                    if (player_info.Count != 0)
+                    {
+                        player_info.Reverse();
+                        string player_info_get = String.Join(",", player_info);
+                        char[] split = ",".ToCharArray();
+                        string[] values = player_info_get.Split(split);
+                        foreach (string value in values)
+                        {
+                            Application.DoEvents();
+                            string[] values_inner = value.Split(new string[] { "*|*" }, StringSplitOptions.None);
+                            int count = 0;
+                            string _username = "";
+                            string _name = "";
+                            string _date_deposit = "";
+                            string _vip = "";
+                            string _amount = "";
+                            string _gateway = "";
+                            string _status = "";
+                            string _bill_no = "";
+                            string _contact_no = "";
+                            string _process_datetime = "";
+                            string _method = "";
+
+                            foreach (string value_inner in values_inner)
+                            {
+                                count++;
+
+                                // Username
+                                if (count == 1)
+                                {
+                                    _username = value_inner;
+                                }
+                                // Name
+                                else if (count == 2)
+                                {
+                                    _name = value_inner;
+                                }
+                                // Deposit Date
+                                else if (count == 3)
+                                {
+                                    _date_deposit = value_inner;
+                                }
+                                // VIP
+                                else if (count == 4)
+                                {
+                                    _vip = value_inner;
+                                }
+                                // Amount
+                                else if (count == 5)
+                                {
+                                    _amount = value_inner;
+                                }
+                                // Gateway
+                                else if (count == 6)
+                                {
+                                    _gateway = value_inner;
+                                }
+                                // Status
+                                else if (count == 7)
+                                {
+                                    _status = value_inner;
+                                }
+                                // Bill No
+                                else if (count == 8)
+                                {
+                                    _bill_no = value_inner;
+                                }
+                                // Contact No
+                                else if (count == 9)
+                                {
+                                    _contact_no = value_inner;
+                                }
+                                // Process Time
+                                else if (count == 10)
+                                {
+                                    _process_datetime = value_inner;
+                                }
+                                // Method
+                                else if (count == 11)
+                                {
+                                    _method = value_inner;
+                                }
+                            }
+
+                            // ----- Insert Data
+                            using (StreamWriter file = new StreamWriter(Path.GetTempPath() + @"\fdgrab_cl.txt", true, Encoding.UTF8))
+                            {
+                                file.WriteLine(_username + "*|*" + _name + "*|*" + _contact_no + "*|*" + _date_deposit + "*|*" + _vip + "*|*" + _amount + "*|*" + _gateway + "*|*" + _status + "*|*" + _bill_no + "*|*" + _process_datetime + "*|*" + _method);
+                                file.Close();
+                            }
+                            if (__last_username == _username)
+                            {
+                                Thread.Sleep(1000);
+                                ___InsertData(_username, _name, _date_deposit, _vip, _amount, _gateway, _status, _bill_no, _contact_no, _process_datetime, _method);
+                            }
+                            else
+                            {
+                                ___InsertData(_username, _name, _date_deposit, _vip, _amount, _gateway, _status, _bill_no, _contact_no, _process_datetime, _method);
+                            }
+                            __last_username = _username;
+
+                            __send = 0;
+                        }
+                    }
+
+                    if (!String.IsNullOrEmpty(__player_last_bill_no.Trim()))
+                    {
+                        ___SavePlayerLastBillNo(__player_last_bill_no);
+
+                        Invoke(new Action(() =>
+                        {
+                            label_player_last_bill_no.Text = "Last Bill No.: " + Properties.Settings.Default.______last_bill_no;
+                        }));
+                    }
+
+                    player_info.Clear();
+                    timer.Start();
+                    break;
+                }
             }
         }
 
@@ -707,7 +808,21 @@ namespace CL_FD_Grab
             {
                 if (__isLogin)
                 {
-                    await ___PlayerListNameContactNumberAsync(username, type);
+                    __send++;
+                    if (__send == 5)
+                    {
+                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
+                        __send = 0;
+
+                        __isClose = false;
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        await ___PlayerListNameContactNumberAsync(username, type);
+                    }
                 }
             }
         }
@@ -739,6 +854,8 @@ namespace CL_FD_Grab
                         ["success"] = status,
                         ["action_date"] = process_datetime,
                         ["method"] = method,
+                        ["trans_id"] = bill_no,
+                        ["pg_trans_id"] = "",
                         ["token"] = token
                     };
 
@@ -755,7 +872,7 @@ namespace CL_FD_Grab
                     {
                         string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
-                        SendEmail("<html><body>Brand: <font color='" + __brand_color + "'>-----" + __brand_code + "-----</font><br/>IP: 192.168.10.252<br/>Location: Robinsons Summit Office<br/>Date and Time: [" + datetime + "]<br/>Line Number: " + LineNumber() + "<br/>Message: <b>" + err.ToString() + "</b></body></html>");
+                        SendMyBot(err.ToString());
                         __send = 0;
 
                         __isClose = false;
@@ -796,6 +913,8 @@ namespace CL_FD_Grab
                         ["success"] = status,
                         ["action_date"] = process_datetime,
                         ["method"] = method,
+                        ["trans_id"] = bill_no,
+                        ["pg_trans_id"] = "",
                         ["token"] = token
                     };
 
@@ -812,7 +931,7 @@ namespace CL_FD_Grab
                     {
                         string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
-                        SendEmail("<html><body>Brand: <font color='" + __brand_color + "'>-----" + __brand_code + "-----</font><br/>IP: 192.168.10.252<br/>Location: Robinsons Summit Office<br/>Date and Time: [" + datetime + "]<br/>Line Number: " + LineNumber() + "<br/>Message: <b>" + err.ToString() + "</b></body></html>");
+                        SendMyBot(err.ToString());
                         __send = 0;
 
                         __isClose = false;
@@ -825,77 +944,7 @@ namespace CL_FD_Grab
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
         private async void timer_TickAsync(object sender, EventArgs e)
         {
             timer.Stop();
@@ -938,41 +987,26 @@ namespace CL_FD_Grab
             }
         }
 
-        private void SendEmail(string get_message)
+        private void SendMyBot(string message)
         {
             try
             {
-                int port = 587;
-                string host = "smtp.gmail.com";
-                string username = "drake@18tech.com";
-                string password = "@ccess123418tech";
-                string mailFrom = "noreply@mail.com";
-                string mailTo = "drake@18tech.com";
-                string mailTitle = __brand_code + " FD Grab";
-                string mailMessage = get_message;
-
-                using (SmtpClient client = new SmtpClient())
+                string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                string urlString = "https://api.telegram.org/bot{0}/sendMessage?chat_id={1}&text={2}";
+                string apiToken = "772918363:AAHn2ufmP3ocLEilQ1V-IHcqYMcSuFJHx5g";
+                string chatId = "@allandrake";
+                string text = "Brand:%20-----" + __brand_code + " " + __app + "-----%0AIP:%20192.168.10.252%0ALocation:%20Robinsons%20Summit%20Office%0ADate%20and%20Time:%20[" + datetime + "]%0AMessage:%20" + message + "";
+                urlString = String.Format(urlString, apiToken, chatId, text);
+                WebRequest request = WebRequest.Create(urlString);
+                Stream rs = request.GetResponse().GetResponseStream();
+                StreamReader reader = new StreamReader(rs);
+                string line = "";
+                StringBuilder sb = new StringBuilder();
+                while (line != null)
                 {
-                    MailAddress from = new MailAddress(mailFrom);
-                    MailMessage message = new MailMessage
-                    {
-                        From = from
-                    };
-                    message.To.Add(mailTo);
-                    message.Subject = mailTitle;
-                    message.Body = mailMessage;
-                    message.IsBodyHtml = true;
-                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    client.UseDefaultCredentials = false;
-                    client.Host = host;
-                    client.Port = port;
-                    client.EnableSsl = true;
-                    client.Credentials = new NetworkCredential
-                    {
-                        UserName = username,
-                        Password = password
-                    };
-                    client.Send(message);
+                    line = reader.ReadLine();
+                    if (line != null)
+                        sb.Append(line);
                 }
             }
             catch (Exception err)
@@ -980,7 +1014,7 @@ namespace CL_FD_Grab
                 __send++;
                 if (__send == 5)
                 {
-                    SendEmail(get_message);
+                    SendMyBot(message);
                 }
                 else
                 {
@@ -1005,30 +1039,23 @@ namespace CL_FD_Grab
 
         private async void timer_pending_TickAsync(object sender, EventArgs e)
         {
-            try
+            if (__isLogin)
             {
-                if (__isLogin)
+                timer_pending.Stop();
+                char[] split = "*|*".ToCharArray();
+                string[] values = Properties.Settings.Default.______pending_bill_no.Split(split);
+                foreach (var value in values)
                 {
-                    timer_pending.Stop();
-                    char[] split = "*|*".ToCharArray();
-                    string[] values = Properties.Settings.Default.______pending_bill_no.Split(split);
-                    foreach (var value in values)
+                    if (value != "")
                     {
-                        if (value != "")
-                        {
-                            await SearchPendingAsync(value);
-                        }
+                        await ___SearchPendingAsync(value);
                     }
-                    timer_pending.Start();
                 }
-            }
-            catch (Exception err)
-            {
-                MessageBox.Show(err.ToString());
+                timer_pending.Start();
             }
         }
 
-        private async Task SearchPendingAsync(string bill_no)
+        private async Task ___SearchPendingAsync(string bill_no)
         {
             try
             { 
@@ -1036,6 +1063,7 @@ namespace CL_FD_Grab
                 WebClient wc = new WebClient();
 
                 wc.Headers.Add("Cookie", cookie);
+                wc.Credentials = new NetworkCredential("test1", "test2");
                 wc.Encoding = Encoding.UTF8;
                 wc.Headers[HttpRequestHeader.ContentType] = "application/json";
                 wc.Headers["X-Requested-With"] = "XMLHttpRequest";
@@ -1116,7 +1144,21 @@ namespace CL_FD_Grab
             }
             catch (Exception err)
             {
-                MessageBox.Show(err.ToString());
+                __send++;
+                if (__send == 5)
+                {
+                    string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                    SendITSupport("There's a problem to the server, please re-open the application.");
+                    SendMyBot(err.ToString());
+                    __send = 0;
+
+                    __isClose = false;
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    await ___SearchPendingAsync(bill_no);
+                }
             }
         }
 
