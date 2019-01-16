@@ -725,7 +725,7 @@ namespace CL_FD_Grab
                             }
                             if (__last_username == _username)
                             {
-                                Thread.Sleep(1000);
+                                Thread.Sleep(100);
                                 ___InsertData(_username, _name, _date_deposit, _vip, _amount, _gateway, _status, _bill_no, _contact_no, _process_datetime, _method);
                             }
                             else
@@ -1096,7 +1096,7 @@ namespace CL_FD_Grab
 
                     if (__last_username_pending == username.ToString())
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(100);
                         ___InsertData(username.ToString(), __playerlist_cn_pending.ToString(), date_deposit_replace.ToString("yyyy-MM-dd HH:mm:ss"), vip.ToString(), amount.ToString(), gateway.ToString(), status.ToString(), bill_no, __playerlist_cn_pending, process_datetime_replace.ToString("yyyy-MM-dd HH:mm:ss"), method.ToString());
                     }
                     else
@@ -1130,7 +1130,7 @@ namespace CL_FD_Grab
 
                     if (__last_username_pending == username.ToString())
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(100);
                         ___InsertData(username.ToString(), __playerlist_cn_pending.ToString(), date_deposit_replace.ToString("yyyy-MM-dd HH:mm:ss"), vip.ToString(), amount.ToString(), gateway.ToString(), status.ToString(), bill_no, __playerlist_cn_pending, process_datetime_replace.ToString("yyyy-MM-dd HH:mm:ss"), method.ToString());
                     }
                     else
