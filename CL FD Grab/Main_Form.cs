@@ -36,6 +36,8 @@ namespace CL_FD_Grab
         private string __last_username = "";
         private string __last_username_pending = "";
         private string __url = "";
+        private string __username = "clfdgrab";
+        private string __password = "123456";
         Form __mainFormHandler;
 
         // Drag Header to Move
@@ -250,7 +252,7 @@ namespace CL_FD_Grab
         // Form Load
         private void Main_Form_Load(object sender, EventArgs e)
         {
-            webBrowser.Navigate("http://sn.gk001.gpk456.com/Account/Login");
+            webBrowser.Navigate("http://sn.gk001.gpkbk456.com/Account/Login?returnTo=%2F");
 
             label1.Text = Properties.Settings.Default.______pending_bill_no;
         }
@@ -269,7 +271,7 @@ namespace CL_FD_Grab
                 {
                     try
                     {
-                        if (webBrowser.Url.ToString().Equals("http://sn.gk001.gpk456.com/Account/Login"))
+                        if (webBrowser.Url.ToString().Equals("http://sn.gk001.gpkbk456.com/Account/Login?returnTo=%2F"))
                         {
                             if (__isLogin)
                             {
@@ -295,7 +297,7 @@ namespace CL_FD_Grab
                             webBrowser.WebBrowserShortcutsEnabled = true;
                         }
 
-                        if (webBrowser.Url.ToString().Equals("http://sn.gk001.gpk456.com/"))
+                        if (webBrowser.Url.ToString().Equals("http://sn.gk001.gpkbk456.com/"))
                         {
                             label_brand.Visible = true;
                             pictureBox_loader.Visible = true;
@@ -503,7 +505,7 @@ namespace CL_FD_Grab
                     {"minId", null},
                 };
 
-                byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpk456.com/ThirdPartyPayment/LoadNew", "POST", reqparm);
+                byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpkbk456.com/ThirdPartyPayment/LoadNew", "POST", reqparm);
                 string responsebody = Encoding.UTF8.GetString(result);
                 var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                 __jo = JObject.Parse(responsebody.ToString());
@@ -774,7 +776,7 @@ namespace CL_FD_Grab
                         {"account", username}
                     };
 
-                    byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpk456.com/Member/GetDetail", "POST", reqparm);
+                    byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpkbk456.com/Member/GetDetail", "POST", reqparm);
                     string responsebody = Encoding.UTF8.GetString(result);
                     var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                     var jo = JObject.Parse(deserializeObject.ToString());
@@ -796,7 +798,7 @@ namespace CL_FD_Grab
                         {"account", username}
                     };
 
-                    byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpk456.com/Member/GetDetail", "POST", reqparm);
+                    byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpkbk456.com/Member/GetDetail", "POST", reqparm);
                     string responsebody = Encoding.UTF8.GetString(result);
                     var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                     var jo = JObject.Parse(deserializeObject.ToString());
@@ -951,42 +953,6 @@ namespace CL_FD_Grab
             await ___GetPlayerListsRequest();
         }
 
-        private void SendITSupport(string message)
-        {
-            try
-            {
-                string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
-                string urlString = "https://api.telegram.org/bot{0}/sendMessage?chat_id={1}&text={2}";
-                string apiToken = "798422517:AAGxMBvataWOid8SRDMid0nkTv0q0l64-Qs";
-                string chatId = "@fd_grab_it_support";
-                string text = "Brand:%20-----" + __brand_code + "-----%0AIP:%20192.168.10.252%0ALocation:%20Robinsons%20Summit%20Office%0ADate%20and%20Time:%20[" + datetime + "]%0AMessage:%20" + message + "";
-                urlString = String.Format(urlString, apiToken, chatId, text);
-                WebRequest request = WebRequest.Create(urlString);
-                Stream rs = request.GetResponse().GetResponseStream();
-                StreamReader reader = new StreamReader(rs);
-                string line = "";
-                StringBuilder sb = new StringBuilder();
-                while (line != null)
-                {
-                    line = reader.ReadLine();
-                    if (line != null)
-                        sb.Append(line);
-                }
-            }
-            catch (Exception err)
-            {
-                __send++;
-                if (__send == 5)
-                {
-                    SendITSupport(message);
-                }
-                else
-                {
-                    MessageBox.Show(err.ToString());
-                }
-            }
-        }
-
         private void SendMyBot(string message)
         {
             try
@@ -1014,11 +980,53 @@ namespace CL_FD_Grab
                 __send++;
                 if (__send == 5)
                 {
-                    SendMyBot(message);
+                    MessageBox.Show(err.ToString());
+
+                    __isClose = false;
+                    Environment.Exit(0);
                 }
                 else
                 {
+                    SendMyBot(message);
+                }
+            }
+        }
+
+        private void SendITSupport(string message)
+        {
+            try
+            {
+                string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                string urlString = "https://api.telegram.org/bot{0}/sendMessage?chat_id={1}&text={2}";
+                string apiToken = "798422517:AAGTProXoK8LkOpfG6qAUPho6JH4M9PUaFA";
+                string chatId = "@fd_grab_it_support";
+                string text = "Brand:%20-----" + __brand_code + "-----%0AIP:%20192.168.10.252%0ALocation:%20Robinsons%20Summit%20Office%0ADate%20and%20Time:%20[" + datetime + "]%0AMessage:%20" + message + "";
+                urlString = String.Format(urlString, apiToken, chatId, text);
+                WebRequest request = WebRequest.Create(urlString);
+                Stream rs = request.GetResponse().GetResponseStream();
+                StreamReader reader = new StreamReader(rs);
+                string line = "";
+                StringBuilder sb = new StringBuilder();
+                while (line != null)
+                {
+                    line = reader.ReadLine();
+                    if (line != null)
+                        sb.Append(line);
+                }
+            }
+            catch (Exception err)
+            {
+                __send++;
+                if (__send == 5)
+                {
                     MessageBox.Show(err.ToString());
+
+                    __isClose = false;
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    SendITSupport(message);
                 }
             }
         }
@@ -1058,17 +1066,16 @@ namespace CL_FD_Grab
         private async Task ___SearchPendingAsync(string bill_no)
         {
             try
-            { 
+            {
                 var cookie = Cookie.GetCookieInternal(webBrowser.Url, false);
                 WebClient wc = new WebClient();
 
                 wc.Headers.Add("Cookie", cookie);
-                wc.Credentials = new NetworkCredential("test1", "test2");
                 wc.Encoding = Encoding.UTF8;
                 wc.Headers[HttpRequestHeader.ContentType] = "application/json";
                 wc.Headers["X-Requested-With"] = "XMLHttpRequest";
 
-                string responsebody = await wc.UploadStringTaskAsync("http://sn.gk001.gpk456.com/ThirdPartyPayment/LoadNew", "{\"count\":100,\"minId\":null,\"query\":{\"search\":\"true\",\"Id\":" + bill_no.Replace("SN_", "") + "}}");
+                string responsebody = await wc.UploadStringTaskAsync("http://sn.gk001.gpkbk456.com/ThirdPartyPayment/LoadNew", "{\"count\":100,\"minId\":null,\"query\":{\"search\":\"true\",\"Id\":" + bill_no.Replace("SN_", "") + "}}");
                 var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                 JObject jo = JObject.Parse(responsebody.ToString());
 
