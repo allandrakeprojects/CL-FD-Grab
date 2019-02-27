@@ -24,6 +24,7 @@ namespace CL_FD_Grab
         private bool __isLogin = false;
         private bool __isClose;
         private bool m_aeroEnabled;
+        private bool __is_send = true;
         private int __send = 0;
         private int __total_player = 0;
         private string __brand_code = "CL";
@@ -284,8 +285,7 @@ namespace CL_FD_Grab
                                 label_currentrecord.Visible = false;
                                 __mainFormHandler = Application.OpenForms[0];
                                 __mainFormHandler.Size = new Size(466, 468);
-
-                                string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                                
                                 SendITSupport("The application have been logout, please re-login again.");
                                 SendMyBot("The application have been logout, please re-login again.");
                                 __send = 0;
@@ -325,10 +325,8 @@ namespace CL_FD_Grab
                     }
                     catch (Exception err)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
@@ -370,12 +368,32 @@ namespace CL_FD_Grab
 
         private void ___PlayerLastBillNo()
         {
-            if (Properties.Settings.Default.______last_bill_no == "")
+            try
             {
-                ___GetLastBillNo();
-            }
+                if (Properties.Settings.Default.______last_bill_no == "")
+                {
+                    ___GetLastBillNo();
+                }
 
-            label_player_last_bill_no.Text = "Last Bill No.: " + Properties.Settings.Default.______last_bill_no;
+                label_player_last_bill_no.Text = "Last Bill No.: " + Properties.Settings.Default.______last_bill_no;
+            }
+            catch (Exception err)
+            {
+                __send++;
+                if (__send == 5)
+                {
+                    SendMyBot(err.ToString());
+                    SendITSupport("There's a problem to the server, please re-open the application.");
+
+                    __isClose = false;
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    ___WaitNSeconds(10);
+                    ___PlayerLastBillNo();
+                }
+            }
         }
 
         private void ___GetLastBillNo()
@@ -383,6 +401,57 @@ namespace CL_FD_Grab
             try
             {
                 string password = __brand_code.ToString() + "youdieidie";
+                byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
+                byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+                string token = BitConverter.ToString(hash)
+                   .Replace("-", string.Empty)
+                   .ToLower();
+
+                using (var wb = new WebClient())
+                {
+                    var data = new NameValueCollection
+                    {
+                        ["brand_code"] = __brand_code,
+                        ["token"] = token
+                    };
+
+                    var result = wb.UploadValues("http://192.168.10.252:8080/API/lastFDRecord", "POST", data);
+                    string responsebody = Encoding.UTF8.GetString(result);
+                    var deserializeObject = JsonConvert.DeserializeObject(responsebody);
+                    JObject jo = JObject.Parse(deserializeObject.ToString());
+                    JToken lbn = jo.SelectToken("$.msg");
+
+                    Properties.Settings.Default.______last_bill_no = lbn.ToString();
+                    Properties.Settings.Default.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                if (__isLogin)
+                {
+                    __send++;
+                    if (__send == 5)
+                    {
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
+
+                        __isClose = false;
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        ___WaitNSeconds(10);
+                        ___GetLastBillNo2();
+                    }
+                }
+            }
+        }
+
+        private void ___GetLastBillNo2()
+        {
+            try
+            {
+                string password = __brand_code + "youdieidie";
                 byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
                 byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
                 string token = BitConverter.ToString(hash)
@@ -414,68 +483,15 @@ namespace CL_FD_Grab
                     __send++;
                     if (__send == 5)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
                     }
                     else
                     {
-                        ___GetLastBillNo2();
-                    }
-                }
-            }
-        }
-
-        private void ___GetLastBillNo2()
-        {
-            try
-            {
-                string password = __brand_code + "youdieidie";
-                byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
-                byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
-                string token = BitConverter.ToString(hash)
-                   .Replace("-", string.Empty)
-                   .ToLower();
-
-                using (var wb = new WebClient())
-                {
-                    var data = new NameValueCollection
-                    {
-                        ["brand_code"] = __brand_code,
-                        ["token"] = token
-                    };
-
-                    var result = wb.UploadValues("http://zeus2.ssitex.com:8080/API/lastFDRecord", "POST", data);
-                    string responsebody = Encoding.UTF8.GetString(result);
-                    var deserializeObject = JsonConvert.DeserializeObject(responsebody);
-                    JObject jo = JObject.Parse(deserializeObject.ToString());
-                    JToken lbn = jo.SelectToken("$.msg");
-
-                    Properties.Settings.Default.______last_bill_no = lbn.ToString();
-                    Properties.Settings.Default.Save();
-                }
-            }
-            catch (Exception err)
-            {
-                if (__isLogin)
-                {
-                    __send++;
-                    if (__send == 5)
-                    {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
-                        SendITSupport("There's a problem to the server, please re-open the application.");
-                        SendMyBot(err.ToString());
-                        __send = 0;
-
-                        __isClose = false;
-                        Environment.Exit(0);
-                    }
-                    else
-                    {
+                        ___WaitNSeconds(10);
                         ___GetLastBillNo();
                     }
                 }
@@ -522,16 +538,15 @@ namespace CL_FD_Grab
                     __send++;
                     if (__send == 5)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
                     }
                     else
                     {
+                        ___WaitNSeconds(10);
                         await ___GetPlayerListsRequest();
                     }
                 }
@@ -815,16 +830,15 @@ namespace CL_FD_Grab
                     __send++;
                     if (__send == 5)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
                     }
                     else
                     {
+                        ___WaitNSeconds(10);
                         await ___PlayerListNameContactNumberAsync(username, type);
                     }
                 }
@@ -832,6 +846,64 @@ namespace CL_FD_Grab
         }
 
         private void ___InsertData(string username, string name, string date_deposit, string vip, string amount, string gateway, string status, string bill_no, string contact_no, string process_datetime, string method)
+        {
+            try
+            {
+                double amount_replace = Convert.ToDouble(amount);
+                string password = __brand_code + username.ToLower() + date_deposit + "youdieidie";
+                byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
+                byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+                string token = BitConverter.ToString(hash)
+                   .Replace("-", string.Empty)
+                   .ToLower();
+
+                using (var wb = new WebClient())
+                {
+                    var data = new NameValueCollection
+                    {
+                        ["username"] = username,
+                        ["name"] = name,
+                        ["date_deposit"] = date_deposit,
+                        ["contact"] = contact_no,
+                        ["vip"] = vip,
+                        ["gateway"] = gateway,
+                        ["brand_code"] = __brand_code,
+                        ["amount"] = amount_replace.ToString("N0"),
+                        ["success"] = status,
+                        ["action_date"] = process_datetime,
+                        ["method"] = method,
+                        ["trans_id"] = bill_no,
+                        ["pg_trans_id"] = "",
+                        ["token"] = token
+                    };
+
+                    var response = wb.UploadValues("http://192.168.10.252:8080/API/sendFD", "POST", data);
+                    string responseInString = Encoding.UTF8.GetString(response);
+                }
+            }
+            catch (Exception err)
+            {
+                if (__isLogin)
+                {
+                    __send++;
+                    if (__send == 5)
+                    {
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
+
+                        __isClose = false;
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        ___WaitNSeconds(10);
+                        ____InsertData2(username, name, date_deposit, vip, amount, gateway, status, bill_no, contact_no, process_datetime, method);
+                    }
+                }
+            }
+        }
+
+        private void ____InsertData2(string username, string name, string date_deposit, string vip, string amount, string gateway, string status, string bill_no, string contact_no, string process_datetime, string method)
         {
             try
             {
@@ -874,75 +946,15 @@ namespace CL_FD_Grab
                     __send++;
                     if (__send == 5)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
                     }
                     else
                     {
-                        ____InsertData2(username, name, date_deposit, vip, amount, gateway, status, bill_no, contact_no, process_datetime, method);
-                    }
-                }
-            }
-        }
-
-        private void ____InsertData2(string username, string name, string date_deposit, string vip, string amount, string gateway, string status, string bill_no, string contact_no, string process_datetime, string method)
-        {
-            try
-            {
-                double amount_replace = Convert.ToDouble(amount);
-                string password = __brand_code + username.ToLower() + date_deposit + "youdieidie";
-                byte[] encodedPassword = new UTF8Encoding().GetBytes(password);
-                byte[] hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
-                string token = BitConverter.ToString(hash)
-                   .Replace("-", string.Empty)
-                   .ToLower();
-
-                using (var wb = new WebClient())
-                {
-                    var data = new NameValueCollection
-                    {
-                        ["username"] = username,
-                        ["name"] = name,
-                        ["date_deposit"] = date_deposit,
-                        ["contact"] = contact_no,
-                        ["vip"] = vip,
-                        ["gateway"] = gateway,
-                        ["brand_code"] = __brand_code,
-                        ["amount"] = amount_replace.ToString("N0"),
-                        ["success"] = status,
-                        ["action_date"] = process_datetime,
-                        ["method"] = method,
-                        ["trans_id"] = bill_no,
-                        ["pg_trans_id"] = "",
-                        ["token"] = token
-                    };
-
-                    var response = wb.UploadValues("http://zeus2.ssitex.com:8080/API/sendFD", "POST", data);
-                    string responseInString = Encoding.UTF8.GetString(response);
-                }
-            }
-            catch (Exception err)
-            {
-                if (__isLogin)
-                {
-                    __send++;
-                    if (__send == 5)
-                    {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
-                        SendITSupport("There's a problem to the server, please re-open the application.");
-                        SendMyBot(err.ToString());
-                        __send = 0;
-
-                        __isClose = false;
-                        Environment.Exit(0);
-                    }
-                    else
-                    {
+                        ___WaitNSeconds(10);
                         ___InsertData(username, name, date_deposit, vip, amount, gateway, status, bill_no, contact_no, process_datetime, method);
                     }
                 }
@@ -982,13 +994,15 @@ namespace CL_FD_Grab
                 __send++;
                 if (__send == 5)
                 {
-                    MessageBox.Show(err.ToString());
+                    SendITSupport("There's a problem to the server, please re-open the application.");
+                    SendMyBot(err.ToString());
 
                     __isClose = false;
                     Environment.Exit(0);
                 }
                 else
                 {
+                    ___WaitNSeconds(10);
                     SendMyBot(message);
                 }
             }
@@ -996,41 +1010,46 @@ namespace CL_FD_Grab
 
         private void SendITSupport(string message)
         {
-            try
+            if (__is_send)
             {
-                string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
-                string urlString = "https://api.telegram.org/bot{0}/sendMessage?chat_id={1}&text={2}";
-                string apiToken = "612187347:AAE9doWWcStpWrDrfpOod89qGSxCJ5JwQO4";
-                string chatId = "@it_support_ssi";
-                string text = "-----" + __brand_code + " " + __app + "-----%0A%0AIP:%20" + Properties.Settings.Default.______server_ip + "%0ALocation:%20" + Properties.Settings.Default.______server_location + "%0ADate%20and%20Time:%20[" + datetime + "]%0AMessage:%20" + message + "";
-                urlString = String.Format(urlString, apiToken, chatId, text);
-                WebRequest request = WebRequest.Create(urlString);
-                Stream rs = request.GetResponse().GetResponseStream();
-                StreamReader reader = new StreamReader(rs);
-                string line = "";
-                StringBuilder sb = new StringBuilder();
-                while (line != null)
+                try
                 {
-                    line = reader.ReadLine();
-                    if (line != null)
+                    string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
+                    string urlString = "https://api.telegram.org/bot{0}/sendMessage?chat_id={1}&text={2}";
+                    string apiToken = "612187347:AAE9doWWcStpWrDrfpOod89qGSxCJ5JwQO4";
+                    string chatId = "@it_support_ssi";
+                    string text = "-----" + __brand_code + " " + __app + "-----%0A%0AIP:%20" + Properties.Settings.Default.______server_ip + "%0ALocation:%20" + Properties.Settings.Default.______server_location + "%0ADate%20and%20Time:%20[" + datetime + "]%0AMessage:%20" + message + "";
+                    urlString = String.Format(urlString, apiToken, chatId, text);
+                    WebRequest request = WebRequest.Create(urlString);
+                    Stream rs = request.GetResponse().GetResponseStream();
+                    StreamReader reader = new StreamReader(rs);
+                    string line = "";
+                    StringBuilder sb = new StringBuilder();
+                    while (line != null)
                     {
-                        sb.Append(line);
+                        line = reader.ReadLine();
+                        if (line != null)
+                        {
+                            sb.Append(line);
+                        }
                     }
                 }
-            }
-            catch (Exception err)
-            {
-                __send++;
-                if (__send == 5)
+                catch (Exception err)
                 {
-                    MessageBox.Show(err.ToString());
+                    __send++;
+                    if (__send == 5)
+                    {
+                        SendITSupport("There's a problem to the server, please re-open the application.");
+                        SendMyBot(err.ToString());
 
-                    __isClose = false;
-                    Environment.Exit(0);
-                }
-                else
-                {
-                    SendITSupport(message);
+                        __isClose = false;
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        ___WaitNSeconds(10);
+                        SendITSupport(message);
+                    }
                 }
             }
         }
@@ -1158,16 +1177,15 @@ namespace CL_FD_Grab
                 __send++;
                 if (__send == 5)
                 {
-                    string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                     SendITSupport("There's a problem to the server, please re-open the application.");
                     SendMyBot(err.ToString());
-                    __send = 0;
 
                     __isClose = false;
                     Environment.Exit(0);
                 }
                 else
                 {
+                    ___WaitNSeconds(10);
                     await ___SearchPendingAsync(bill_no);
                 }
             }
@@ -1228,7 +1246,7 @@ namespace CL_FD_Grab
                         ["token"] = token
                     };
 
-                    var response = wb.UploadValues("http://zeus.ssitex.com:8080/API/updateAppStatus", "POST", data);
+                    var response = wb.UploadValues("http://192.168.10.252:8080/API/updateAppStatus", "POST", data);
                     string responseInString = Encoding.UTF8.GetString(response);
                 }
             }
@@ -1239,16 +1257,15 @@ namespace CL_FD_Grab
                     __send++;
                     if (__send == 5)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
                     }
                     else
                     {
+                        ___WaitNSeconds(10);
                         ___DetectRunning2();
                     }
                 }
@@ -1277,7 +1294,7 @@ namespace CL_FD_Grab
                         ["token"] = token
                     };
 
-                    var response = wb.UploadValues("http://zeus2.ssitex.com:8080/API/updateAppStatus", "POST", data);
+                    var response = wb.UploadValues("http://zeus.ssitex.com:8080/API/updateAppStatus", "POST", data);
                     string responseInString = Encoding.UTF8.GetString(response);
                 }
             }
@@ -1288,19 +1305,42 @@ namespace CL_FD_Grab
                     __send++;
                     if (__send == 5)
                     {
-                        string datetime = DateTime.Now.ToString("dd MMM HH:mm:ss");
                         SendITSupport("There's a problem to the server, please re-open the application.");
                         SendMyBot(err.ToString());
-                        __send = 0;
 
                         __isClose = false;
                         Environment.Exit(0);
                     }
                     else
                     {
+                        ___WaitNSeconds(10);
                         ___DetectRunning();
                     }
                 }
+            }
+        }
+
+        private void panel1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (__is_send)
+            {
+                __is_send = false;
+                MessageBox.Show("Telegram Notification is Disabled.", __brand_code + " " + __app, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                __is_send = true;
+                MessageBox.Show("Telegram Notification is Enabled.", __brand_code + " " + __app, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void ___WaitNSeconds(int sec)
+        {
+            if (sec < 1) return;
+            DateTime _desired = DateTime.Now.AddSeconds(sec);
+            while (DateTime.Now < _desired)
+            {
+                Application.DoEvents();
             }
         }
     }
