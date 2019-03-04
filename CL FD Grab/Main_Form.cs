@@ -329,7 +329,7 @@ namespace CL_FD_Grab
                                 pictureBox_loader.Visible = true;
                                 label_player_last_bill_no.Visible = true;
                                 webBrowser.WebBrowserShortcutsEnabled = false;
-                                ___PlayerLastBillNo();
+                                await ___PlayerLastBillNoAsync();
                                 await ___GetPlayerListsRequest();
                             }
                         }
@@ -377,13 +377,15 @@ namespace CL_FD_Grab
             ___CloseMessageBox();
         }
 
-        private void ___PlayerLastBillNo()
+        private async Task ___PlayerLastBillNoAsync()
         {
+            Properties.Settings.Default.______last_bill_no = "";
+
             try
             {
                 if (Properties.Settings.Default.______last_bill_no == "")
                 {
-                    ___GetLastBillNo();
+                    await ___GetLastBillNoAsync();
                 }
 
                 label_player_last_bill_no.Text = "Last Bill No.: " + Properties.Settings.Default.______last_bill_no;
@@ -402,12 +404,12 @@ namespace CL_FD_Grab
                 else
                 {
                     ___WaitNSeconds(10);
-                    ___PlayerLastBillNo();
+                    await ___PlayerLastBillNoAsync();
                 }
             }
         }
 
-        private void ___GetLastBillNo()
+        private async Task ___GetLastBillNoAsync()
         {
             try
             {
@@ -426,7 +428,7 @@ namespace CL_FD_Grab
                         ["token"] = token
                     };
 
-                    var result = wb.UploadValues("http://192.168.10.252:8080/API/lastFDRecord", "POST", data);
+                    byte[] result = await wb.UploadValuesTaskAsync("http://192.168.10.252:8080/API/lastFDRecord", "POST", data);
                     string responsebody = Encoding.UTF8.GetString(result);
                     var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                     JObject jo = JObject.Parse(deserializeObject.ToString());
@@ -452,13 +454,13 @@ namespace CL_FD_Grab
                     else
                     {
                         ___WaitNSeconds(10);
-                        ___GetLastBillNo2();
+                        await ___GetLastBillNo2Async();
                     }
                 }
             }
         }
 
-        private void ___GetLastBillNo2()
+        private async Task ___GetLastBillNo2Async()
         {
             try
             {
@@ -477,7 +479,7 @@ namespace CL_FD_Grab
                         ["token"] = token
                     };
 
-                    var result = wb.UploadValues("http://zeus.ssitex.com:8080/API/lastFDRecord", "POST", data);
+                    var result = await wb.UploadValuesTaskAsync("http://zeus.ssitex.com:8080/API/lastFDRecord", "POST", data);
                     string responsebody = Encoding.UTF8.GetString(result);
                     var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                     JObject jo = JObject.Parse(deserializeObject.ToString());
@@ -503,7 +505,7 @@ namespace CL_FD_Grab
                     else
                     {
                         ___WaitNSeconds(10);
-                        ___GetLastBillNo();
+                        await ___GetLastBillNoAsync();
                     }
                 }
             }
@@ -584,9 +586,9 @@ namespace CL_FD_Grab
                         JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
                         await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
                         JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
-                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                         JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
-                        DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                         JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
                         JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
                         string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -614,9 +616,9 @@ namespace CL_FD_Grab
                         JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
                         await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
                         JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
-                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                         JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
-                        //DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        //DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                         JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
                         JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
                         string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -1179,9 +1181,9 @@ namespace CL_FD_Grab
                     JToken username = jo.SelectToken("$.Data[0].Account").ToString();
                     await ___PlayerListNameContactNumberAsync(username.ToString(), "pending");
                     JToken date_deposit = jo.SelectToken("$.Data[0].Time").ToString();
-                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                     JToken process_datetime = jo.SelectToken("$.Data[0].StateTime").ToString();
-                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                     JToken vip = jo.SelectToken("$.Data[0].MemberLevelName").ToString();
                     JToken gateway__method = jo.SelectToken("$.Data[0].SettingName").ToString();
                     string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -1213,9 +1215,9 @@ namespace CL_FD_Grab
                     JToken username = jo.SelectToken("$.Data[0].Account").ToString();
                     await ___PlayerListNameContactNumberAsync(username.ToString(), "pending");
                     JToken date_deposit = jo.SelectToken("$.Data[0].Time").ToString();
-                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                     JToken process_datetime = jo.SelectToken("$.Data[0].StateTime").ToString();
-                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "dd/MM/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
                     JToken vip = jo.SelectToken("$.Data[0].MemberLevelName").ToString();
                     JToken gateway__method = jo.SelectToken("$.Data[0].SettingName").ToString();
                     string[] gateway__method_get = gateway__method.ToString().Split('-');
