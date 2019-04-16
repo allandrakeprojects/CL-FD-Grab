@@ -24,7 +24,6 @@ namespace CL_FD_Grab
         private bool __isLogin = false;
         private bool __isClose;
         private bool m_aeroEnabled;
-        private bool __is_send = true;
         private int __send = 0;
         private int __total_player = 0;
         private string __brand_code = "CL";
@@ -301,6 +300,12 @@ namespace CL_FD_Grab
                                 SendMyBot("The application have been logout, please re-login again.");
                                 __send = 0;
                                 timer_pending.Stop();
+
+                                if (!Properties.Settings.Default.______is_send_telegram)
+                                {
+                                    __isClose = false;
+                                    Environment.Exit(0);
+                                }
                             }
 
                             __isLogin = false;
@@ -586,9 +591,9 @@ namespace CL_FD_Grab
                         JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
                         await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
                         JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
-                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                         JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
-                        DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                         JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
                         JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
                         string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -616,9 +621,9 @@ namespace CL_FD_Grab
                         JToken username = __jo.SelectToken("$.Data[" + i + "].Account").ToString();
                         await ___PlayerListNameContactNumberAsync(username.ToString(), "normal");
                         JToken date_deposit = __jo.SelectToken("$.Data[" + i + "].Time").ToString();
-                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                         JToken process_datetime = __jo.SelectToken("$.Data[" + i + "].StateTime").ToString();
-                        //DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                        //DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                         JToken vip = __jo.SelectToken("$.Data[" + i + "].MemberLevelName").ToString();
                         JToken gateway__method = __jo.SelectToken("$.Data[" + i + "].SettingName").ToString();
                         string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -1049,7 +1054,7 @@ namespace CL_FD_Grab
 
         private void SendITSupport(string message)
         {
-            if (__is_send)
+            if (Properties.Settings.Default.______is_send_telegram)
             {
                 try
                 {
@@ -1181,9 +1186,9 @@ namespace CL_FD_Grab
                     JToken username = jo.SelectToken("$.Data[0].Account").ToString();
                     await ___PlayerListNameContactNumberAsync(username.ToString(), "pending");
                     JToken date_deposit = jo.SelectToken("$.Data[0].Time").ToString();
-                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                     JToken process_datetime = jo.SelectToken("$.Data[0].StateTime").ToString();
-                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                     JToken vip = jo.SelectToken("$.Data[0].MemberLevelName").ToString();
                     JToken gateway__method = jo.SelectToken("$.Data[0].SettingName").ToString();
                     string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -1215,9 +1220,9 @@ namespace CL_FD_Grab
                     JToken username = jo.SelectToken("$.Data[0].Account").ToString();
                     await ___PlayerListNameContactNumberAsync(username.ToString(), "pending");
                     JToken date_deposit = jo.SelectToken("$.Data[0].Time").ToString();
-                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime date_deposit_replace = DateTime.ParseExact(date_deposit.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                     JToken process_datetime = jo.SelectToken("$.Data[0].StateTime").ToString();
-                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(20);
+                    DateTime process_datetime_replace = DateTime.ParseExact(process_datetime.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture).AddHours(8);
                     JToken vip = jo.SelectToken("$.Data[0].MemberLevelName").ToString();
                     JToken gateway__method = jo.SelectToken("$.Data[0].SettingName").ToString();
                     string[] gateway__method_get = gateway__method.ToString().Split('-');
@@ -1389,14 +1394,18 @@ namespace CL_FD_Grab
 
         private void panel1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (__is_send)
+            label1.Visible = false;
+
+            if (Properties.Settings.Default.______is_send_telegram)
             {
-                __is_send = false;
+                Properties.Settings.Default.______is_send_telegram = false;
+                Properties.Settings.Default.Save();
                 MessageBox.Show("Telegram Notification is Disabled.", __brand_code + " " + __app, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                __is_send = true;
+                Properties.Settings.Default.______is_send_telegram = true;
+                Properties.Settings.Default.Save();
                 MessageBox.Show("Telegram Notification is Enabled.", __brand_code + " " + __app, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
