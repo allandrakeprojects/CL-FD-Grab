@@ -321,7 +321,7 @@ namespace CL_FD_Grab
                             webBrowser.WebBrowserShortcutsEnabled = true;
                         }
 
-                        if (webBrowser.Url.ToString().Equals(__root_url + "/"))
+                        if (webBrowser.Url.ToString().Equals(__root_url + "/") || webBrowser.Url.ToString().Equals(__root_url))
                         {
                             label_brand.Visible = true;
                             pictureBox_loader.Visible = true;
