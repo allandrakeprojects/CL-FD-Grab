@@ -94,5 +94,17 @@ namespace CL_FD_Grab.Properties {
                 this["______is_send_telegram"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("oei.uetuf.com")]
+        public string ______root_url {
+            get {
+                return ((string)(this["______root_url"]));
+            }
+            set {
+                this["______root_url"] = value;
+            }
+        }
     }
 }

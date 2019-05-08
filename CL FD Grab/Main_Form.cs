@@ -26,6 +26,7 @@ namespace CL_FD_Grab
         private bool m_aeroEnabled;
         private int __send = 0;
         private int __total_player = 0;
+        private string __root_url = "";
         private string __brand_code = "CL";
         private string __brand_color = "#2160AD";
         private string __app = "FD Grab";
@@ -142,6 +143,11 @@ namespace CL_FD_Grab
         {
             InitializeComponent();
 
+            if (String.IsNullOrEmpty(__root_url))
+            {
+                __root_url = Properties.Settings.Default.______root_url.ToString();
+            }
+
             timer_landing.Start();
         }
 
@@ -254,7 +260,7 @@ namespace CL_FD_Grab
         // Form Load
         private void Main_Form_Load(object sender, EventArgs e)
         {
-            webBrowser.Navigate("http://sn.gk001.gpkbk456.com/Account/Login?returnTo=%2F");
+            webBrowser.Navigate(__root_url + "/Account/Login?returnTo=%2F");
 
             try
             {
@@ -284,7 +290,7 @@ namespace CL_FD_Grab
                 {
                     try
                     {
-                        if (webBrowser.Url.ToString().Equals("http://sn.gk001.gpkbk456.com/Account/Login?returnTo=%2F"))
+                        if (webBrowser.Url.ToString().Equals(__root_url + "/Account/Login?returnTo=%2F"))
                         {
                             if (__isLogin)
                             {
@@ -315,7 +321,7 @@ namespace CL_FD_Grab
                             webBrowser.WebBrowserShortcutsEnabled = true;
                         }
 
-                        if (webBrowser.Url.ToString().Equals("http://sn.gk001.gpkbk456.com/"))
+                        if (webBrowser.Url.ToString().Equals(__root_url + "/"))
                         {
                             label_brand.Visible = true;
                             pictureBox_loader.Visible = true;
@@ -541,7 +547,7 @@ namespace CL_FD_Grab
                     {"minId", null},
                 };
 
-                byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpkbk456.com/ThirdPartyPayment/LoadNew", "POST", reqparm);
+                byte[] result = await wc.UploadValuesTaskAsync(__root_url + "/ThirdPartyPayment/LoadNew", "POST", reqparm);
                 string responsebody = Encoding.UTF8.GetString(result);
                 var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                 __jo = JObject.Parse(responsebody.ToString());
@@ -811,7 +817,7 @@ namespace CL_FD_Grab
                         {"account", username}
                     };
 
-                    byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpkbk456.com/Member/GetDetail", "POST", reqparm);
+                    byte[] result = await wc.UploadValuesTaskAsync(__root_url + "/Member/GetDetail", "POST", reqparm);
                     string responsebody = Encoding.UTF8.GetString(result);
                     var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                     var jo = JObject.Parse(deserializeObject.ToString());
@@ -833,7 +839,7 @@ namespace CL_FD_Grab
                         {"account", username}
                     };
 
-                    byte[] result = await wc.UploadValuesTaskAsync("http://sn.gk001.gpkbk456.com/Member/GetDetail", "POST", reqparm);
+                    byte[] result = await wc.UploadValuesTaskAsync(__root_url + "/Member/GetDetail", "POST", reqparm);
                     string responsebody = Encoding.UTF8.GetString(result);
                     var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                     var jo = JObject.Parse(deserializeObject.ToString());
@@ -1170,7 +1176,7 @@ namespace CL_FD_Grab
                 wc.Headers[HttpRequestHeader.ContentType] = "application/json";
                 wc.Headers["X-Requested-With"] = "XMLHttpRequest";
 
-                string responsebody = await wc.UploadStringTaskAsync("http://sn.gk001.gpkbk456.com/ThirdPartyPayment/LoadNew", "{\"count\":100,\"minId\":null,\"query\":{\"search\":\"true\",\"Id\":" + bill_no.Replace("SN_", "") + "}}");
+                string responsebody = await wc.UploadStringTaskAsync(__root_url + "/ThirdPartyPayment/LoadNew", "{\"count\":100,\"minId\":null,\"query\":{\"search\":\"true\",\"Id\":" + bill_no.Replace("SN_", "") + "}}");
                 var deserializeObject = JsonConvert.DeserializeObject(responsebody);
                 JObject jo = JObject.Parse(responsebody.ToString());
 
